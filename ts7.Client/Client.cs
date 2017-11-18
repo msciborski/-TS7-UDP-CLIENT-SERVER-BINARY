@@ -9,16 +9,14 @@ using System.Threading.Tasks;
 
 namespace ts7.Client {
     class Program{
+        private const int listenPort = 6100;
+        private const int timeSenderPort = 6101;
         private static UdpClient _udpClient;
+        private static UdpClient _timeClient;
         static void Main(string[] args){
-            Console.WriteLine("Podaj adres ip:");
-            var ipAddress = Console.ReadLine();
-            IPAddress endpointIPAddress = IPAddress.Parse(ipAddress);
-            //Console.WriteLine("Podaj port:");
-            //var port = Console.ReadLine();
-            _udpClient =new UdpClient();
-            _udpClient.Connect(endpointIPAddress,6100);
-
+            SetupClient();
+            Thread thread = new Thread(DataIN);
+            thread.Start();
             while (true){
                 var msg = Console.ReadLine();
                 byte[] bufferMsg = Encoding.ASCII.GetBytes(msg);
@@ -62,18 +60,26 @@ namespace ts7.Client {
             //}
         }
 
-        //private static void DataIN(){
-        //    byte[] recvBytes = new byte[128];
+        private static void SetupClient() {
+            Console.WriteLine("Podaj adres ip:");
+            var ipAddress = Console.ReadLine();
+            IPAddress endpointIPAddress = IPAddress.Parse(ipAddress);
 
-        //    while (true){
-        //        try{
-        //            s.ReceiveFrom(recvBytes, SocketFlags.None, ref remoEndPoint);
-        //            Console.WriteLine("Message from server: {0}", Encoding.ASCII.GetString(recvBytes));
-        //        }
-        //        catch (SocketException e){
-        //            Console.WriteLine("Server closed!");
-        //        }
-        //    }
-        //}
+            _udpClient = new UdpClient();
+            _udpClient.Connect(endpointIPAddress, listenPort);
+
+            _timeClient = new UdpClient();
+            _timeClient.Connect(endpointIPAddress, timeSenderPort);
+        }
+
+        private static void DataIN(){
+            while (true){
+                Console.WriteLine("Odbieram wiadomość...");
+                IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 6101);
+                byte[] recBuff = _timeClient.Receive(ref remoteEndPoint);
+                var recMsg = Encoding.ASCII.GetString(recBuff);
+                Console.WriteLine("Czas z serwera: {0}", recMsg);
+            }
+        }
     }
 }
