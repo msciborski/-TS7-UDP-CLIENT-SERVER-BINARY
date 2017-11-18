@@ -9,25 +9,38 @@ using System.Threading.Tasks;
 
 namespace ts7.Client {
     class Program{
-        private static Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        private static IPEndPoint ep = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000);
-        private static EndPoint remoEndPoint;
-
+        private static UdpClient _udpClient;
         static void Main(string[] args){
-            remoEndPoint = (EndPoint) ep;
-            s.Bind(remoEndPoint);
-            Thread thread = new Thread(DataIN);
-            thread.Start();
+            Console.WriteLine("Podaj adres ip:");
+            var ipAddress = Console.ReadLine();
+            IPAddress endpointIPAddress = IPAddress.Parse(ipAddress);
+            //Console.WriteLine("Podaj port:");
+            //var port = Console.ReadLine();
+            _udpClient =new UdpClient();
+            _udpClient.Connect(endpointIPAddress,6100);
+
             while (true){
-                try{
-                    string input = Console.ReadLine();
-                    byte[] bytes = Encoding.ASCII.GetBytes(input);
-                    s.SendTo(bytes, ep);
-                }
-                catch (Exception e){
-                    Console.WriteLine(e.Message);
-                }
+                var msg = Console.ReadLine();
+                byte[] bufferMsg = Encoding.ASCII.GetBytes(msg);
+                _udpClient.Send(bufferMsg, bufferMsg.Length);
+                IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 6100);
+                byte[] recvMsg = _udpClient.Receive(ref remoteEndPoint);
+                Console.WriteLine("Message from server: {0}", Encoding.ASCII.GetString(recvMsg));
             }
+            //remoEndPoint = (EndPoint) ep;
+            //s.Bind(ep);
+            //Thread thread = new Thread(DataIN);
+            //thread.Start();
+            //while (true){
+            //    try{
+            //        string input = Console.ReadLine();
+            //        byte[] bytes = Encoding.ASCII.GetBytes(input);
+            //        s.SendTo(bytes, ep);
+            //    }
+            //    catch (Exception e){
+            //        Console.WriteLine(e.Message);
+            //    }
+            //}
 
             //IPAddress broadcast = IPAddress.Parse("127.0.0.1");
             //while (true){
@@ -49,18 +62,18 @@ namespace ts7.Client {
             //}
         }
 
-        private static void DataIN(){
-            byte[] recvBytes = new byte[128];
+        //private static void DataIN(){
+        //    byte[] recvBytes = new byte[128];
 
-            while (true){
-                try{
-                    s.ReceiveFrom(recvBytes, SocketFlags.None, ref remoEndPoint);
-                    Console.WriteLine("Message from server: {0}", Encoding.ASCII.GetString(recvBytes));
-                }
-                catch (SocketException e){
-                    Console.WriteLine("Server closed!");
-                }
-            }
-        }
+        //    while (true){
+        //        try{
+        //            s.ReceiveFrom(recvBytes, SocketFlags.None, ref remoEndPoint);
+        //            Console.WriteLine("Message from server: {0}", Encoding.ASCII.GetString(recvBytes));
+        //        }
+        //        catch (SocketException e){
+        //            Console.WriteLine("Server closed!");
+        //        }
+        //    }
+        //}
     }
 }
