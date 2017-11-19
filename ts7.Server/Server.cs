@@ -27,21 +27,13 @@ namespace ts7.Server{
             SetupServer();
             RegisterUsers();
             StartGame();
-            //while (true){
-            //    IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
-            //    byte[] recvMsg = _listener.Receive(ref sender);
-            //    Console.WriteLine("Message from client {0}: {1}", sender.ToString(), Encoding.ASCII.GetString(recvMsg));
-            //    var msg = String.Format("Server time: {0}", DateTime.Now.ToShortTimeString());
-            //    byte[] sendMsg = Encoding.ASCII.GetBytes(msg);
-            //    _listener.Send(sendMsg, sendMsg.Length, sender);
-            //}
         }
 
         private static void SetupServer(){
             _ipEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), listenPort);
-            _ipEndPointTimeSender = new IPEndPoint(IPAddress.Parse("127.0.0.1"), timeSenderPort);
+            //_ipEndPointTimeSender = new IPEndPoint(IPAddress.Parse("127.0.0.1"), timeSenderPort);
             _listener = new UdpClient(_ipEndPoint);
-            _timeSender = new UdpClient(_ipEndPointTimeSender);
+            //_timeSender = new UdpClient(_ipEndPointTimeSender);
             _players = new List<PlayerData>();
         }
 
@@ -69,25 +61,25 @@ namespace ts7.Server{
             while (_players.Count < playerLimit){
                 
             }
-            Thread thread = new Thread(SendTime);
-            thread.Start();
+            //Thread thread = new Thread(SendTime);
+            //thread.Start();
         }
 
-        public static void SendTime(){
-            int t = 30;
-            while (t >= 0){
-                Console.WriteLine("Wysyłam wiadomosc");
-                var msg = String.Format("Wiadomosc o czasie z servera: {0}", DateTime.Now.ToLongTimeString());
-                byte[] msgBuff = Encoding.ASCII.GetBytes(msg);;
-                foreach (var playerData in _players) {
-                    Console.WriteLine("Wysyłam do: {0}:{1}",playerData.PlayerEndPoint.Address, playerData.PlayerEndPoint.Port);
-                    //_timeSender.Send(msgBuff, msgBuff.Length, playerData.PlayerEndPoint);
-                    _listener.Send(msgBuff, msgBuff.Length, playerData.PlayerEndPoint);
-                }
-                t--;
-                Thread.Sleep(5000);
-            }
-        }
+        //public static void SendTime(){
+        //    int t = 30;
+        //    while (t >= 0){
+        //        Console.WriteLine("Wysyłam wiadomosc");
+        //        var msg = String.Format("Wiadomosc o czasie z servera: {0}", DateTime.Now.ToLongTimeString());
+        //        byte[] msgBuff = Encoding.ASCII.GetBytes(msg);;
+        //        foreach (var playerData in _players) {
+        //            Console.WriteLine("Wysyłam do: {0}:{1}",playerData.PlayerEndPoint.Address, playerData.PlayerEndPoint.Port);
+        //            //_timeSender.Send(msgBuff, msgBuff.Length, playerData.PlayerEndPoint);
+        //            _listener.Send(msgBuff, msgBuff.Length, playerData.PlayerEndPoint);
+        //        }
+        //        t--;
+        //        Thread.Sleep(1000);
+        //    }
+        //}
 
         public static void DataIN(object ep){
             IPEndPoint sender = (IPEndPoint) ep;
@@ -109,6 +101,9 @@ namespace ts7.Server{
         }
 
         private static void ProcessData(string msg, IPEndPoint ep){
+            var newMsg = String.Format("Client {0} wysłał: {1}, serwer odpowiada: {2}", ep.ToString(), msg,  DateTime.Now.ToLongTimeString());
+            byte[] newMsgBuff = Encoding.ASCII.GetBytes(newMsg);
+            _listener.Send(newMsgBuff, newMsgBuff.Length);
         }
 
         class PlayerData{

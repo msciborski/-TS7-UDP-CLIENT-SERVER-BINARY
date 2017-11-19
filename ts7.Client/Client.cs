@@ -29,8 +29,8 @@ namespace ts7.Client {
                 }
 
             }
-            Thread threadTime = new Thread(DataINTime);
-            threadTime.Start();
+            //Thread threadTime = new Thread(DataINTime);
+            //threadTime.Start();
             Thread communicationThread = new Thread(DataIN);
             communicationThread.Start();
             //remoEndPoint = (EndPoint) ep;
@@ -50,6 +50,7 @@ namespace ts7.Client {
 
             //IPAddress broadcast = IPAddress.Parse("127.0.0.1");
             while (true) {
+                Console.Write("Podaj wiadomosc:");
                 var msg = Console.ReadLine();
                 byte[] bytes = Encoding.ASCII.GetBytes(msg);
                 try{
@@ -68,27 +69,25 @@ namespace ts7.Client {
             IPAddress endpointIPAddress = IPAddress.Parse(ipAddress);
 
             _udpClient = new UdpClient();
-            _udpClient.ExclusiveAddressUse = false;
             _udpClient.Connect(endpointIPAddress, listenPort);
 
             _timeClient = new UdpClient();
-            _timeClient.ExclusiveAddressUse = false;
-            _timeClient.Connect(endpointIPAddress, timeSenderPort);
+            _timeClient.Connect(IPAddress.Parse("192.168.0.2"), timeSenderPort);
         }
 
-        private static void DataINTime(){
-            while (true){
-                Console.WriteLine("Odbieram wiadomość...");
-                IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"),0);
-                byte[] recBuff = _udpClient.Receive(ref remoteEndPoint);
-                var recMsg = Encoding.ASCII.GetString(recBuff);
-                Console.WriteLine("Czas z serwera: {0}", recMsg);
-            }
-        }
+        //private static void DataINTime(){
+        //    while (true){
+        //        Console.WriteLine("Odbieram wiadomość...");
+        //        IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"),0);
+        //        byte[] recBuff = _udpClient.Receive(ref remoteEndPoint);
+        //        var recMsg = Encoding.ASCII.GetString(recBuff);
+        //        Console.WriteLine("Czas z serwera: {0}", recMsg);
+        //    }
+        //}
 
         private static void DataIN(){
             while (true){
-                IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 0);
+                IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 6100);
                 byte[] recBuff = _udpClient.Receive(ref remoteEndPoint);
                 var recMsg = Encoding.ASCII.GetString(recBuff);
                 Console.WriteLine("Wiadomość z serwera: ", recMsg);
