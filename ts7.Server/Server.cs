@@ -38,8 +38,8 @@ namespace ts7.Server{
         }
 
         private static void SetupServer(){
-            _ipEndPoint = new IPEndPoint(IPAddress.Any, listenPort);
-            _ipEndPointTimeSender = new IPEndPoint(IPAddress.Any, timeSenderPort);
+            _ipEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), listenPort);
+            _ipEndPointTimeSender = new IPEndPoint(IPAddress.Parse("127.0.0.1"), timeSenderPort);
             _listener = new UdpClient(_ipEndPoint);
             _timeSender = new UdpClient(_ipEndPointTimeSender);
             _players = new List<PlayerData>();
@@ -47,12 +47,12 @@ namespace ts7.Server{
 
         private static void RegisterUsers(){
             while (_players.Count < playerLimit){
-                IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
+                IPEndPoint sender = new IPEndPoint(IPAddress.Any, 6100);
                 byte[] recMsg = _listener.Receive(ref sender);
                 if (!_players.Exists(h => h.PlayerEndPoint.Equals(sender))){
                     _players.Add(new PlayerData(sender));
                     Console.WriteLine("Dodano gracza: {0}", sender.ToString());
-                    var msgToSend = String.Format("Graczu {0} dodano cie.", sender.ToString());
+                    var msgToSend = "Registered";
                     byte[] msgBuffor = Encoding.ASCII.GetBytes(msgToSend);
                     _listener.Send(msgBuffor, msgBuffor.Length, sender);
                 }
@@ -66,6 +66,9 @@ namespace ts7.Server{
         }
 
         private static void StartGame(){
+            while (_players.Count < playerLimit){
+                
+            }
             Thread thread = new Thread(SendTime);
             thread.Start();
         }
@@ -77,10 +80,12 @@ namespace ts7.Server{
                 var msg = String.Format("Wiadomosc o czasie z servera: {0}", DateTime.Now.ToLongTimeString());
                 byte[] msgBuff = Encoding.ASCII.GetBytes(msg);;
                 foreach (var playerData in _players) {
-                    _timeSender.Send(msgBuff, msgBuff.Length, playerData.PlayerEndPoint);
+                    Console.WriteLine("Wysyłam do: {0}:{1}",playerData.PlayerEndPoint.Address, playerData.PlayerEndPoint.Port);
+                    //_timeSender.Send(msgBuff, msgBuff.Length, playerData.PlayerEndPoint);
+                    _listener.Send(msgBuff, msgBuff.Length, playerData.PlayerEndPoint);
                 }
                 t--;
-                Thread.Sleep(1000);
+                Thread.Sleep(5000);
             }
         }
 
