@@ -42,9 +42,6 @@ namespace ts7.Client {
                 }
 
             } while (!registered);
-            //}
-            //remoEndPoint = (EndPoint) ep;
-            //s.Bind(ep);
             Thread thread = new Thread(DataIN);
             thread.Start();
             //while (true){
@@ -76,7 +73,6 @@ namespace ts7.Client {
             //    }
 
             //}
-            Console.ReadLine();
         }
 
         private static void SetupClient() {
@@ -119,21 +115,23 @@ namespace ts7.Client {
                 Console.WriteLine("ID: {0}, data: {1}, answer: {2}, operation: {3}", packet.ID, packet.Data, packet.Answer, packet.Operation);
                 gameRunning = false;
                 _udpClient.Close();
-
+                Console.ReadLine();
             }
             if (packet.Operation == OperationEnum.GUESS && packet.Answer == AnswerEnum.NOT_GUESSED){
                 InputNumber(packet);
             }
             if (packet.Operation == OperationEnum.SUMMARY){
-                Console.WriteLine("Gra zakończona, nie wygrałeś!");
+                Console.WriteLine("Gra zakończona nie wygrałeś.");
                 gameRunning = false;
                 _udpClient.Close();
+                Console.ReadLine();
             }
             if (packet.Operation == OperationEnum.TIME && packet.Answer == AnswerEnum.TIME_OUT){
                 Console.WriteLine("ID: {0}, data: {1}, answer: {2}, operation: {3}", packet.ID, packet.Data, packet.Answer, packet.Operation);
                 Console.WriteLine("GRA ZAKOŃCZONA, NIKT NIE ZGADNAL.");
                 gameRunning = false;
                 _udpClient.Close();
+                Console.ReadLine();
             }
         }
 
@@ -144,8 +142,8 @@ namespace ts7.Client {
                     break;
                 }
                 int number;
-                //var msg = Console.ReadLine();
-                var msg = "10";
+                Console.WriteLine("Podaj liczbe:");
+                var msg = Console.ReadLine();
                 if (int.TryParse(msg, out number)) {
                     Data.Packet packetToSend = new Data.Packet(packet.ID, number, AnswerEnum.NULL, OperationEnum.GUESS);
                     var bytesToSend = packetToSend.Serialize();
@@ -156,7 +154,7 @@ namespace ts7.Client {
                     isNumber = false;
                 }
 
-            } while (!isNumber);
+            } while (!isNumber && gameRunning);
         }
         //private static void DataIN() {
         //    while (true) {

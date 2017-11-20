@@ -16,7 +16,7 @@ namespace ts7.Server{
     class Server{
         private const int listenPort = 6100;
         private const int timeSenderPort = 11000;
-        private const int playerLimit = 1;
+        private const int playerLimit = 2;
         private static int time;
         private static bool gameRunning = false;
         private static int numberToGuess;
@@ -41,7 +41,6 @@ namespace ts7.Server{
             //    byte[] sendMsg = Encoding.ASCII.GetBytes(msg);
             //    _listener.Send(sendMsg, sendMsg.Length, sender);
             //}
-            Console.ReadLine();
         }
 
         private static void SetupServer(){
@@ -74,6 +73,7 @@ namespace ts7.Server{
             //numberToGuess = HelperData.RandomInt(0, 255);
             numberToGuess = 10;
             Console.WriteLine("Number to guess: {0}", numberToGuess);
+            StartClientThreads();
             timer = new Timer(SubstractTime,5,0,1000);
 
 
@@ -125,10 +125,11 @@ namespace ts7.Server{
             while (gameRunning){
                 IPEndPoint sender = (IPEndPoint)ep;
                 try {
-                    byte[] recMessageBuff = _listener.Receive(ref sender);
-                    var recMessage = Encoding.ASCII.GetString(recMessageBuff);
-                    Console.WriteLine("Message from {0}: {1}", sender.ToString(), recMessage);
-                    ProcessData(recMessage, sender);
+                    byte[] recByte = _listener.Receive(ref sender);
+                    Data.Packet packet = Data.Packet.Deserialize(recByte);
+                    Console.WriteLine("ID: {0}, data: {1}, answer: {2}, operation: {3}", packet.ID, packet.Data, packet.Answer, packet.Operation);
+
+                    ProcessData(packet, sender);
                 } catch (Exception e) {
                     Console.WriteLine(e.Message);
                 }
@@ -152,6 +153,8 @@ namespace ts7.Server{
             }
         }
 
+
+
         private static void Register(Data.Packet packet, IPEndPoint endPoint){
             if (!_players.ContainsKey(endPoint)) {
                 _players.Add(endPoint, new PlayerData(endPoint, packet.ID));
@@ -169,14 +172,15 @@ namespace ts7.Server{
                 gameRunning = false;
                 timer.Change(Timeout.Infinite, Timeout.Infinite);
                 foreach (var playerData in _players) {
-                    if (playerData.Value.PlayerEndPoint != endPoint) {
+                    //if (playerData.Value.PlayerEndPoint.Equals(endPoint)) {
                         Data.Packet packetToSendForNotGuessed = new Data.Packet(playerData.Value.SessionID, 0,
                             AnswerEnum.NULL, OperationEnum.SUMMARY);
                         byte[] bytesToSendForNotGuessed = packetToSendForNotGuessed.Serialize();
-                        _listener.Send(bytesToSendForNotGuessed, bytesToSendForNotGuessed.Length,
-                            playerData.Value.PlayerEndPoint);
-                    }
+                        _listener.Send(bytesToSendForNotGuessed, bytesToSendForNotGuessed.Length, playerData.Key);
+                    //}
                 }
+                Console.ReadLine();
+                gameRunning = false;
                 _listener.Close();
             } else {
                 Data.Packet packetToSend = new Data.Packet(packet.ID, 0, AnswerEnum.NOT_GUESSED, OperationEnum.GUESS);
@@ -198,6 +202,16 @@ namespace ts7.Server{
 
             public void StartThread(){
                 _playerThread.Start(PlayerEndPoint);
+            }
+        }
+
+        class ThreadObject{
+            public IPEndPoint EndPoint{ get; set; }
+            public Data.Packet Packet{ get; set; }
+
+            public ThreadObject(IPEndPoint ep, Data.Packet p){
+                EndPoint = ep;
+                Packet = p;
             }
         }
     }
