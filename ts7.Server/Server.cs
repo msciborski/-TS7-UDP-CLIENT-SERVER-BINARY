@@ -13,8 +13,8 @@ using System.Threading.Tasks;
 namespace ts7.Server{
     class Server{
         private const int listenPort = 6100;
-        private const int timeSenderPort = 6101;
-        private const int playerLimit = 2;
+        private const int timeSenderPort = 11000;
+        private const int playerLimit = 1;
         private static int time;
         private static bool gameRunning = false;
         private static UdpClient _listener;
@@ -22,6 +22,7 @@ namespace ts7.Server{
         private static IPEndPoint _ipEndPoint;
         private static IPEndPoint _ipEndPointTimeSender;
         private static List<PlayerData> _players;
+
 
         private static void Main(string[] args){
             SetupServer();
@@ -41,7 +42,7 @@ namespace ts7.Server{
             _ipEndPoint = new IPEndPoint(IPAddress.Any, listenPort);
             _ipEndPointTimeSender = new IPEndPoint(IPAddress.Any, timeSenderPort);
             _listener = new UdpClient(_ipEndPoint);
-            _timeSender = new UdpClient(_ipEndPointTimeSender);
+            _timeSender = new UdpClient();
             _players = new List<PlayerData>();
         }
 
@@ -76,9 +77,7 @@ namespace ts7.Server{
                 Console.WriteLine("Wysyłam wiadomosc");
                 var msg = String.Format("Wiadomosc o czasie z servera: {0}", DateTime.Now.ToLongTimeString());
                 byte[] msgBuff = Encoding.ASCII.GetBytes(msg);;
-                foreach (var playerData in _players) {
-                    _timeSender.Send(msgBuff, msgBuff.Length, playerData.PlayerEndPoint);
-                }
+                _timeSender.Send(msgBuff, msgBuff.Length, new IPEndPoint(IPAddress.Parse("192.168.56.255"), timeSenderPort));
                 t--;
                 Thread.Sleep(1000);
             }

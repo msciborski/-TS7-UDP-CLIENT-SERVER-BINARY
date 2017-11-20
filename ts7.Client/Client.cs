@@ -10,21 +10,22 @@ using System.Threading.Tasks;
 namespace ts7.Client {
     class Program{
         private const int listenPort = 6100;
-        private const int timeSenderPort = 6101;
+        private const int timeSenderPort = 4000;
         private static UdpClient _udpClient;
         private static UdpClient _timeClient;
         static void Main(string[] args){
             SetupClient();
-            Thread thread = new Thread(DataIN);
-            thread.Start();
-            while (true){
+
+            //while (true){
                 var msg = Console.ReadLine();
                 byte[] bufferMsg = Encoding.ASCII.GetBytes(msg);
                 _udpClient.Send(bufferMsg, bufferMsg.Length);
                 IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 6100);
                 byte[] recvMsg = _udpClient.Receive(ref remoteEndPoint);
                 Console.WriteLine("Message from server: {0}", Encoding.ASCII.GetString(recvMsg));
-            }
+            //}
+            Thread thread = new Thread(DataIN);
+            thread.Start();
             //remoEndPoint = (EndPoint) ep;
             //s.Bind(ep);
             //Thread thread = new Thread(DataIN);
@@ -67,15 +68,18 @@ namespace ts7.Client {
 
             _udpClient = new UdpClient();
             _udpClient.Connect(endpointIPAddress, listenPort);
-
-            _timeClient = new UdpClient();
+            _timeClient = new UdpClient(timeSenderPort);
             _timeClient.Connect(endpointIPAddress, timeSenderPort);
+
+
+
+            //_timeClient.Connect(endpointIPAddress, timeSenderPort);
         }
 
         private static void DataIN(){
             while (true){
                 Console.WriteLine("Odbieram wiadomość...");
-                IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 6101);
+                IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Broadcast,timeSenderPort);
                 byte[] recBuff = _timeClient.Receive(ref remoteEndPoint);
                 var recMsg = Encoding.ASCII.GetString(recBuff);
                 Console.WriteLine("Czas z serwera: {0}", recMsg);
