@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ts7.Server", "ts7.Server\ts
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ts7.Client", "ts7.Client\ts7.Client.csproj", "{612E80DB-0E54-4CA3-8D8C-A8E6AA2411F9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ts7.Packet", "ts7.Packet\ts7.Packet.csproj", "{368FC08B-B8C3-4FDD-851B-14CB69D407FA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ts7.Data", "ts7.Packet\ts7.Data.csproj", "{368FC08B-B8C3-4FDD-851B-14CB69D407FA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

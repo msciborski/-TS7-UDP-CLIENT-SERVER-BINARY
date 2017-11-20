@@ -9,6 +9,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ts7.Data;
+using ts7.Packet;
 
 namespace ts7.Server{
     class Server{
@@ -17,11 +19,14 @@ namespace ts7.Server{
         private const int playerLimit = 1;
         private static int time;
         private static bool gameRunning = false;
+        private static int numberToGuess;
         private static UdpClient _listener;
+
+        private static Timer timer;
         //private static UdpClient _timeSender;
         private static IPEndPoint _ipEndPoint;
         //private static IPEndPoint _ipEndPointTimeSender;
-        private static List<PlayerData> _players;
+        private static Dictionary<IPEndPoint, PlayerData> _players;
 
 
         private static void Main(string[] args){
@@ -36,6 +41,7 @@ namespace ts7.Server{
             //    byte[] sendMsg = Encoding.ASCII.GetBytes(msg);
             //    _listener.Send(sendMsg, sendMsg.Length, sender);
             //}
+            Console.ReadLine();
         }
 
         private static void SetupServer(){
@@ -43,32 +49,64 @@ namespace ts7.Server{
             //_ipEndPointTimeSender = new IPEndPoint(IPAddress.Any, timeSenderPort);
             _listener = new UdpClient(_ipEndPoint);
             //_timeSender = new UdpClient();
-            _players = new List<PlayerData>();
+            _players = new Dictionary<IPEndPoint, PlayerData>();
         }
 
         private static void RegisterUsers(){
             while (_players.Count < playerLimit){
                 IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
-                byte[] recMsg = _listener.Receive(ref sender);
-                if (!_players.Exists(h => h.PlayerEndPoint.Equals(sender))){
-                    _players.Add(new PlayerData(sender));
-                    Console.WriteLine("Dodano gracza: {0}", sender.ToString());
-                    var msgToSend = String.Format("Graczu {0} dodano cie.", sender.ToString());
-                    byte[] msgBuffor = Encoding.ASCII.GetBytes(msgToSend);
-                    _listener.Send(msgBuffor, msgBuffor.Length, sender);
-                }
-                else{
-                    Console.WriteLine("Player {0} istnieje.", sender.ToString());
-                    var msgToSend = String.Format("Gracz {0} istnieje.", sender.ToString());
-                    byte[] msgBuffor = Encoding.ASCII.GetBytes(msgToSend);
-                    _listener.Send(msgBuffor, msgBuffor.Length, sender);
-                }
+                byte[] recvMsg = _listener.Receive(ref sender);
+                Data.Packet packet = Data.Packet.Deserialize(recvMsg);
+                ProcessData(packet,sender);
+            }
+            foreach (var playerData in _players){
+                Data.Packet packet = new Data.Packet(playerData.Value.SessionID, 0, AnswerEnum.ACK, OperationEnum.START);
+                byte[] bytesToSend = packet.Serialize();
+                _listener.Send(bytesToSend, bytesToSend.Length, playerData.Value.PlayerEndPoint);
             }
         }
 
         private static void StartGame(){
-            //Thread thread = new Thread(SendTime);
-            //thread.Start();
+            Console.WriteLine(CalculateTime());
+            time = CalculateTime();
+            //time = 3;
+            gameRunning = true;
+            //numberToGuess = HelperData.RandomInt(0, 255);
+            numberToGuess = 10;
+            Console.WriteLine("Number to guess: {0}", numberToGuess);
+            timer = new Timer(SubstractTime,5,0,1000);
+
+
+        }
+
+        private static int CalculateTime(){
+            int sessionIDSum = 0;
+            foreach (var playerData in _players){
+                sessionIDSum += playerData.Value.SessionID;
+            }
+            return ((sessionIDSum * 99) % 100) + 30;
+        }
+
+        private static void SubstractTime(object state){
+            if (time > 0){
+                Console.WriteLine(time);;
+                time--;
+            }else if (time == 0){
+                gameRunning = false;
+                foreach (var playerData in _players){
+                    try{
+                        Data.Packet packetToSend = new Data.Packet(playerData.Value.SessionID, 0, AnswerEnum.TIME_OUT,
+                            OperationEnum.TIME);
+                        byte[] bytesToSend = packetToSend.Serialize();
+                        _listener.Send(bytesToSend, bytesToSend.Length, playerData.Value.PlayerEndPoint);
+                    }
+                    catch (Exception e){
+                        Console.WriteLine("Client disconected: {0}", playerData.Value.SessionID);
+                    }
+                }
+                _listener.Close();
+                timer.Change(Timeout.Infinite, Timeout.Infinite);
+            }
         }
 
         //public static void SendTime(){
@@ -84,33 +122,77 @@ namespace ts7.Server{
         //}
 
         public static void DataIN(object ep){
-            IPEndPoint sender = (IPEndPoint) ep;
-            try{
-                byte[] recMessageBuff = _listener.Receive(ref sender);
-                var recMessage = Encoding.ASCII.GetString(recMessageBuff);
-                Console.WriteLine("Message from {0}: {1}", sender.ToString(), recMessage);
-                ProcessData(recMessage, sender);
-            }
-            catch (Exception e){
-                Console.WriteLine(e.Message);
+            while (gameRunning){
+                IPEndPoint sender = (IPEndPoint)ep;
+                try {
+                    byte[] recMessageBuff = _listener.Receive(ref sender);
+                    var recMessage = Encoding.ASCII.GetString(recMessageBuff);
+                    Console.WriteLine("Message from {0}: {1}", sender.ToString(), recMessage);
+                    ProcessData(recMessage, sender);
+                } catch (Exception e) {
+                    Console.WriteLine(e.Message);
+                }
             }
         }
 
         private static void StartClientThreads(){
             foreach (var playerData in _players){
-                playerData.StartThread();
+                playerData.Value.StartThread();
             }
         }
 
-        private static void ProcessData(string msg, IPEndPoint ep){
+        private static void ProcessData(object p, object ep){
+            Data.Packet packet = (Data.Packet) p;
+            IPEndPoint endPoint = (IPEndPoint) ep;
+            if (packet.Operation == OperationEnum.REGISTER && packet.Answer == AnswerEnum.REQUEST){
+                Register(packet, endPoint);
+            }
+            if (packet.Operation == OperationEnum.GUESS){
+                Guessing(packet, endPoint);
+            }
         }
 
+        private static void Register(Data.Packet packet, IPEndPoint endPoint){
+            if (!_players.ContainsKey(endPoint)) {
+                _players.Add(endPoint, new PlayerData(endPoint, packet.ID));
+                Data.Packet packetToSend = new Data.Packet(packet.ID, 0, AnswerEnum.ACK, OperationEnum.REGISTER);
+                byte[] bytesToSend = packetToSend.Serialize();
+                _listener.Send(bytesToSend, bytesToSend.Length, endPoint);
+            }
+        }
+
+        private static void Guessing(Data.Packet packet, IPEndPoint endPoint){
+            if (packet.Data == numberToGuess) {
+                Data.Packet packetToSend = new Data.Packet(packet.ID, 0, AnswerEnum.GUESSED, OperationEnum.GUESS);
+                byte[] bytesToSend = packetToSend.Serialize();
+                _listener.Send(bytesToSend, bytesToSend.Length, endPoint);
+                gameRunning = false;
+                timer.Change(Timeout.Infinite, Timeout.Infinite);
+                foreach (var playerData in _players) {
+                    if (playerData.Value.PlayerEndPoint != endPoint) {
+                        Data.Packet packetToSendForNotGuessed = new Data.Packet(playerData.Value.SessionID, 0,
+                            AnswerEnum.NULL, OperationEnum.SUMMARY);
+                        byte[] bytesToSendForNotGuessed = packetToSendForNotGuessed.Serialize();
+                        _listener.Send(bytesToSendForNotGuessed, bytesToSendForNotGuessed.Length,
+                            playerData.Value.PlayerEndPoint);
+                    }
+                }
+                _listener.Close();
+            } else {
+                Data.Packet packetToSend = new Data.Packet(packet.ID, 0, AnswerEnum.NOT_GUESSED, OperationEnum.GUESS);
+                byte[] bytesToSend = packetToSend.Serialize();
+                _listener.Send(bytesToSend, bytesToSend.Length, endPoint);
+            }
+        } 
+
         class PlayerData{
+            public int SessionID{ get; set; }
             public IPEndPoint PlayerEndPoint{ get; set; }
             private Thread _playerThread;
 
-            public PlayerData(IPEndPoint ep){
+            public PlayerData(IPEndPoint ep, int id){
                 PlayerEndPoint = ep;
+                SessionID = id;
                 _playerThread = new Thread(Server.DataIN);
             }
 

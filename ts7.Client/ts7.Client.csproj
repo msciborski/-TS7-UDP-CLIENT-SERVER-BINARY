@@ -50,9 +50,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ts7.Packet\ts7.Packet.csproj">
+    <ProjectReference Include="..\ts7.Packet\ts7.Data.csproj">
       <Project>{368fc08b-b8c3-4fdd-851b-14cb69d407fa}</Project>
-      <Name>ts7.Packet</Name>
+      <Name>ts7.Data</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
