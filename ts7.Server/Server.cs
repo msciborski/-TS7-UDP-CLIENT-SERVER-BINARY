@@ -18,9 +18,9 @@ namespace ts7.Server{
         private static int time;
         private static bool gameRunning = false;
         private static UdpClient _listener;
-        private static UdpClient _timeSender;
+        //private static UdpClient _timeSender;
         private static IPEndPoint _ipEndPoint;
-        private static IPEndPoint _ipEndPointTimeSender;
+        //private static IPEndPoint _ipEndPointTimeSender;
         private static List<PlayerData> _players;
 
 
@@ -40,9 +40,9 @@ namespace ts7.Server{
 
         private static void SetupServer(){
             _ipEndPoint = new IPEndPoint(IPAddress.Any, listenPort);
-            _ipEndPointTimeSender = new IPEndPoint(IPAddress.Any, timeSenderPort);
+            //_ipEndPointTimeSender = new IPEndPoint(IPAddress.Any, timeSenderPort);
             _listener = new UdpClient(_ipEndPoint);
-            _timeSender = new UdpClient();
+            //_timeSender = new UdpClient();
             _players = new List<PlayerData>();
         }
 
@@ -67,21 +67,21 @@ namespace ts7.Server{
         }
 
         private static void StartGame(){
-            Thread thread = new Thread(SendTime);
-            thread.Start();
+            //Thread thread = new Thread(SendTime);
+            //thread.Start();
         }
 
-        public static void SendTime(){
-            int t = 30;
-            while (t >= 0){
-                Console.WriteLine("Wysyłam wiadomosc");
-                var msg = String.Format("Wiadomosc o czasie z servera: {0}", DateTime.Now.ToLongTimeString());
-                byte[] msgBuff = Encoding.ASCII.GetBytes(msg);;
-                _timeSender.Send(msgBuff, msgBuff.Length, new IPEndPoint(IPAddress.Parse("192.168.56.255"), timeSenderPort));
-                t--;
-                Thread.Sleep(1000);
-            }
-        }
+        //public static void SendTime(){
+        //    int t = 30;
+        //    while (t >= 0){
+        //        Console.WriteLine("Wysyłam wiadomosc");
+        //        var msg = String.Format("Wiadomosc o czasie z servera: {0}", DateTime.Now.ToLongTimeString());
+        //        byte[] msgBuff = Encoding.ASCII.GetBytes(msg);;
+        //        _timeSender.Send(msgBuff, msgBuff.Length, new IPEndPoint(IPAddress.Parse("192.168.56.255"), timeSenderPort));
+        //        t--;
+        //        Thread.Sleep(1000);
+        //    }
+        //}
 
         public static void DataIN(object ep){
             IPEndPoint sender = (IPEndPoint) ep;
