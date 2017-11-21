@@ -16,7 +16,7 @@ namespace ts7.Server{
     class Server{
         private const int listenPort = 6100;
         private const int timeSenderPort = 11000;
-        private const int playerLimit = 2;
+        private const int playerLimit = 1;
         private static int time;
         private static bool gameRunning = false;
         private static int numberToGuess;
@@ -84,8 +84,17 @@ namespace ts7.Server{
         }
 
         private static void SubstractTime(object state){
+            int tempTime = 0;
             if (time > 0){
                 Console.WriteLine(time);;
+                if (tempTime < 3){
+                    tempTime++;
+                }
+                if (tempTime == 3){
+                    Thread thread = new Thread(SendTime);
+                    thread.Start(time);
+                 
+                }
                 time--;
             }else if (time == 0){
                 gameRunning = false;
@@ -105,6 +114,15 @@ namespace ts7.Server{
             }
         }
 
+        private static void SendTime(object t){
+            int timeToSend = (int) t;
+            foreach (var playerData in _players) {
+                Console.WriteLine("Wysyłam czas do: {0}", playerData.Key.ToString());
+                Data.Packet packet = new Data.Packet(playerData.Value.SessionID, timeToSend, AnswerEnum.NULL, OperationEnum.TIME);
+                byte[] bytesToSend = packet.Serialize();
+                _listener.Send(bytesToSend, bytesToSend.Length, playerData.Key);
+            }
+        }
         //public static void SendTime(){
         //    int t = 30;
         //    while (t >= 0){

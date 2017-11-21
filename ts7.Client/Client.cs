@@ -127,6 +127,10 @@ namespace ts7.Client {
                 _udpClient.Close();
                 Console.ReadLine();
             }
+            if (packet.Operation == OperationEnum.TIME && packet.Answer == AnswerEnum.NULL){
+                Console.WriteLine("ID: {0}, data: {1}, answer: {2}, operation: {3}", packet.ID, packet.Data, packet.Answer, packet.Operation);
+                Console.WriteLine("Czas do końca: {0}", packet.Data);
+            }
             if (packet.Operation == OperationEnum.TIME && packet.Answer == AnswerEnum.TIME_OUT){
                 Console.WriteLine("ID: {0}, data: {1}, answer: {2}, operation: {3}", packet.ID, packet.Data, packet.Answer, packet.Operation);
                 Console.WriteLine("GRA ZAKOŃCZONA, NIKT NIE ZGADNAL.");
