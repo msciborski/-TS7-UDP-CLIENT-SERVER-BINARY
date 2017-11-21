@@ -76,13 +76,13 @@ namespace ts7.Client {
         }
 
         private static void SetupClient() {
-            IPAddress endpointIPAddress = IPAddress.Parse("127.0.0.1");
+            IPAddress endpointIPAddress = IPAddress.Parse("172.20.10.8"); //tutaj wpisać adres serwera
             _udpClient = new UdpClient();
             _udpClient.Connect(endpointIPAddress, listenPort);
 
 
-            //_timeClient = new UdpClient(timeSenderPort);
-            //_timeClient.Connect(endpointIPAddress, timeSenderPort);
+            _timeClient = new UdpClient();
+            _timeClient.Connect(endpointIPAddress, timeSenderPort);
             //_timeClient.Connect(endpointIPAddress, timeSenderPort);
         }
 
@@ -102,6 +102,14 @@ namespace ts7.Client {
             }
         }
 
+        private static void DataTimeIn(){
+            while (gameRunning){
+                IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, timeSenderPort);
+                byte[] recBuff = _timeClient.Receive(ref Program.remoteEndPoint);
+                var recMsg = Encoding.ASCII.GetString(recBuff);
+                Console.WriteLine("Wiadomosc z serwera: {0}", recMsg);
+            }
+        }
         private static void DataManager(object p){
             Data.Packet packet = (Data.Packet) p;
 
