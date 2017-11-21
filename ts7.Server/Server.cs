@@ -32,15 +32,8 @@ namespace ts7.Server{
         private static void Main(string[] args){
             SetupServer();
             RegisterUsers();
+            SendStartMessage();
             StartGame();
-            //while (true){
-            //    IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
-            //    byte[] recvMsg = _listener.Receive(ref sender);
-            //    Console.WriteLine("Message from client {0}: {1}", sender.ToString(), Encoding.ASCII.GetString(recvMsg));
-            //    var msg = String.Format("Server time: {0}", DateTime.Now.ToShortTimeString());
-            //    byte[] sendMsg = Encoding.ASCII.GetBytes(msg);
-            //    _listener.Send(sendMsg, sendMsg.Length, sender);
-            //}
         }
 
         private static void SetupServer(){
@@ -58,7 +51,10 @@ namespace ts7.Server{
                 Data.Packet packet = Data.Packet.Deserialize(recvMsg);
                 ProcessData(packet,sender);
             }
-            foreach (var playerData in _players){
+        }
+
+        private static void SendStartMessage(){
+            foreach (var playerData in _players) {
                 Data.Packet packet = new Data.Packet(playerData.Value.SessionID, 0, AnswerEnum.ACK, OperationEnum.START);
                 byte[] bytesToSend = packet.Serialize();
                 _listener.Send(bytesToSend, bytesToSend.Length, playerData.Value.PlayerEndPoint);
@@ -70,8 +66,8 @@ namespace ts7.Server{
             time = CalculateTime();
             //time = 3;
             gameRunning = true;
-            //numberToGuess = HelperData.RandomInt(0, 255);
-            numberToGuess = 10;
+            numberToGuess = HelperData.RandomInt(0, 255);
+            //numberToGuess = 10;
             Console.WriteLine("Number to guess: {0}", numberToGuess);
             StartClientThreads();
             timer = new Timer(SubstractTime,5,0,1000);

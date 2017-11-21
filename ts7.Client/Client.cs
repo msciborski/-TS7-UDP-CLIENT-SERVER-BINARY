@@ -118,6 +118,7 @@ namespace ts7.Client {
                 Console.ReadLine();
             }
             if (packet.Operation == OperationEnum.GUESS && packet.Answer == AnswerEnum.NOT_GUESSED){
+                Console.WriteLine("Nie zgadłeś!");
                 InputNumber(packet);
             }
             if (packet.Operation == OperationEnum.SUMMARY){

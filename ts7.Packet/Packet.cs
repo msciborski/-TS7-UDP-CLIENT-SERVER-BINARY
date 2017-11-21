@@ -132,6 +132,7 @@ namespace ts7.Data {
 
         private static int GetIntFromBitArray(BitArray bitArray) {
 
+            //Becouse int has 4bytes
             if (bitArray.Length > 32)
                 throw new ArgumentException("Argument length shall be at most 32 bits.");
 
@@ -141,6 +142,7 @@ namespace ts7.Data {
 
         }
 
+        //We have to reverse our bit arrays, becouse GetIntFromBitArray conversion reverse it to. :D 
         private static void Reverse(BitArray array) {
             int length = array.Length;
             int mid = (length / 2);
