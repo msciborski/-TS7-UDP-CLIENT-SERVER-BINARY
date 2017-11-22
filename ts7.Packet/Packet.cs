@@ -45,6 +45,10 @@ namespace ts7.Data {
             BitArray answerBitArray = SerializeValue((int)Answer, 4);
             BitArray operationBitArray = SerializeValue((int)Operation, 6);
             BitArray completeBitArray = MergeArrays(idBitArray, dataBitArray, answerBitArray, operationBitArray);
+            Reverse(idBitArray);
+            Reverse(dataBitArray);
+            Reverse(answerBitArray);
+            Reverse(operationBitArray);
             byte[] result = BitArrayToByteArray(completeBitArray, 0, 32);
             return result;
 
@@ -102,6 +106,14 @@ namespace ts7.Data {
             BitArray operationBitArray = new BitArray(6);
 
             int secondArrayCounter = 0;
+            for (int i = 0; i < operationBitArray.Length; i++) {
+                operationBitArray[i] = bitArray[secondArrayCounter];
+                secondArrayCounter++;
+            }
+            for (int i = 0; i < answerBitArray.Length; i++) {
+                answerBitArray[i] = bitArray[secondArrayCounter];
+                secondArrayCounter++;
+            }
             for (int i = 0; i < idBitArray.Length; i++) {
                 idBitArray[i] = bitArray[secondArrayCounter];
                 secondArrayCounter++;
@@ -110,20 +122,11 @@ namespace ts7.Data {
                 dataBitArray[i] = bitArray[secondArrayCounter];
                 secondArrayCounter++;
             }
-            for (int i = 0; i < answerBitArray.Length; i++) {
-                answerBitArray[i] = bitArray[secondArrayCounter];
-                secondArrayCounter++;
-            }
-            for (int i = 0; i < operationBitArray.Length; i++) {
-                operationBitArray[i] = bitArray[secondArrayCounter];
-                secondArrayCounter++;
-            }
 
             Reverse(idBitArray);
             Reverse(dataBitArray);
             Reverse(answerBitArray);
             Reverse(operationBitArray);
-
             Packet packet = new Packet(GetIntFromBitArray(idBitArray), GetIntFromBitArray(dataBitArray),
                 (AnswerEnum)GetIntFromBitArray(answerBitArray), (OperationEnum)GetIntFromBitArray(operationBitArray));
 
@@ -163,6 +166,14 @@ namespace ts7.Data {
             int countAnswetBitArray = answerBitArray.Length;
             int countOperationBitArray = operationBitArray.Length;
             int secondArrayCounter = 0;
+            for (int i = 0; i < countOperationBitArray; i++) {
+                completeBitArray[secondArrayCounter] = operationBitArray[i];
+                secondArrayCounter++;
+            }
+            for (int i = 0; i < countAnswetBitArray; i++) {
+                completeBitArray[secondArrayCounter] = answerBitArray[i];
+                secondArrayCounter++;
+            }
             for (int i = 0; i < countIdBitArray; i++) {
                 completeBitArray[secondArrayCounter] = idBitArray[i];
                 secondArrayCounter++;
@@ -170,16 +181,6 @@ namespace ts7.Data {
 
             for (int i = 0; i < countDataBitArray; i++) {
                 completeBitArray[secondArrayCounter] = dataBitArray[i];
-                secondArrayCounter++;
-            }
-
-            for (int i = 0; i < countAnswetBitArray; i++) {
-                completeBitArray[secondArrayCounter] = answerBitArray[i];
-                secondArrayCounter++;
-            }
-
-            for (int i = 0; i < countOperationBitArray; i++) {
-                completeBitArray[secondArrayCounter] = operationBitArray[i];
                 secondArrayCounter++;
             }
             for (int i = 0; i < 6; i++) {

@@ -18,6 +18,7 @@ namespace ts7.Server {
         private const int timeSenderPort = 11000;
         private const int playerLimit = 1;
         private static int time;
+        private static int tempTime = 0;
         private static bool gameRunning = false;
         private static int numberToGuess;
         private static UdpClient _listener;
@@ -85,17 +86,17 @@ namespace ts7.Server {
             return ((sessionIDSum * 99) % 100) + 30;
         }
 
-        private static void SubstractTime(object state){
-            int tempTime = 0;
-            if (time > 0){
-                Console.WriteLine(time);;
-                if (tempTime < 3){
+        private static void SubstractTime(object state) {
+            if (time > 0) {
+                Console.WriteLine(time); ;
+                if (tempTime < 3) {
                     tempTime++;
+                    Console.WriteLine(tempTime);
                 }
-                if (tempTime == 3){
+                if (tempTime == 3) {
                     Thread thread = new Thread(SendTime);
                     thread.Start(time);
-                 
+                    tempTime = 0;
                 }
                 time--;
             } else if (time == 0) {
@@ -115,8 +116,8 @@ namespace ts7.Server {
             }
         }
 
-        private static void SendTime(object t){
-            int timeToSend = (int) t;
+        private static void SendTime(object t) {
+            int timeToSend = (int)t;
             foreach (var playerData in _players) {
                 Console.WriteLine("Wysyłam czas do: {0}", playerData.Key.ToString());
                 Data.Packet packet = new Data.Packet(playerData.Value.SessionID, timeToSend, AnswerEnum.NULL, OperationEnum.TIME);
@@ -187,12 +188,12 @@ namespace ts7.Server {
                 gameRunning = false;
                 timer.Change(Timeout.Infinite, Timeout.Infinite);
                 foreach (var playerData in _players) {
-                    //if (playerData.Value.PlayerEndPoint.Equals(endPoint)) {
-                    Data.Packet packetToSendForNotGuessed = new Data.Packet(playerData.Value.SessionID, 0,
-                        AnswerEnum.NULL, OperationEnum.SUMMARY);
-                    byte[] bytesToSendForNotGuessed = packetToSendForNotGuessed.Serialize();
-                    _listener.Send(bytesToSendForNotGuessed, bytesToSendForNotGuessed.Length, playerData.Key);
-                    //}
+                    if (!playerData.Value.PlayerEndPoint.Equals(endPoint)) {
+                        Data.Packet packetToSendForNotGuessed = new Data.Packet(playerData.Value.SessionID, 0,
+                            AnswerEnum.NULL, OperationEnum.SUMMARY);
+                        byte[] bytesToSendForNotGuessed = packetToSendForNotGuessed.Serialize();
+                        _listener.Send(bytesToSendForNotGuessed, bytesToSendForNotGuessed.Length, playerData.Key);
+                    }
                 }
                 Console.ReadLine();
                 gameRunning = false;
