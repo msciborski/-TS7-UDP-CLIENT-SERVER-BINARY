@@ -184,7 +184,7 @@ namespace ts7.Data {
                 secondArrayCounter++;
             }
             for (int i = 0; i < 6; i++) {
-                completeBitArray[secondArrayCounter] = false;
+                 completeBitArray[secondArrayCounter] = false;
                 secondArrayCounter++;
             }
 

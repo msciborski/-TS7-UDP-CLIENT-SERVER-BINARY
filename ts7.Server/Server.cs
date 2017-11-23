@@ -16,7 +16,7 @@ namespace ts7.Server {
     class Server {
         private const int listenPort = 6100;
         private const int timeSenderPort = 11000;
-        private const int playerLimit = 1;
+        private const int playerLimit = 2;
         private static int time;
         private static int tempTime = 0;
         private static bool gameRunning = false;

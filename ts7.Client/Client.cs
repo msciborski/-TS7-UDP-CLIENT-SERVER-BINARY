@@ -76,7 +76,9 @@ namespace ts7.Client {
         }
 
         private static void SetupClient() {
+            //IPAddress endpointIPAddress = IPAddress.Parse("172.20.10.8"); //tutaj wpisać adres serwera
             IPAddress endpointIPAddress = IPAddress.Parse("127.0.0.1"); //tutaj wpisać adres serwera
+
             _udpClient = new UdpClient();
             _udpClient.Connect(endpointIPAddress, listenPort);
 
