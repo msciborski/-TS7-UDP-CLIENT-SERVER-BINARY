@@ -32,7 +32,12 @@ namespace ts7.Data {
         public AnswerEnum Answer { get; private set; } //enum which represents answer type
         public OperationEnum Operation { get; set; } //enum 
 
-        public Packet(int id, int data, AnswerEnum answer, OperationEnum operation){
+        public Packet(int id, AnswerEnum answer, OperationEnum operation){
+            ID = id;
+            Answer = answer;
+            Operation = operation;
+        }
+        public Packet(int id,int data, AnswerEnum answer, OperationEnum operation) {
             ID = id;
             Data = data;
             Answer = answer;
@@ -51,6 +56,10 @@ namespace ts7.Data {
             //Reverse(operationBitArray);
             byte[] result = BitArrayToByteArray(completeBitArray);
             //result = result.Reverse().ToArray();
+            Console.WriteLine();
+            foreach (var b in result){
+                Console.Write(b.ToString());
+            }
             return result;
 
         }
@@ -148,7 +157,7 @@ namespace ts7.Data {
                 secondArrayCounter++;
             }
             for (int i = 0; i < 6; i++) {
-                 completeBitArray[secondArrayCounter] = false;
+                        completeBitArray[secondArrayCounter] = false;
                 secondArrayCounter++;
             }
 
@@ -164,7 +173,6 @@ namespace ts7.Data {
             for (int i = 0; i < howManyZero; i++) {
                 builder.Append('0');
             }
-
             var readyToUseString = builder.Append(idBinString);
             BitArray bitArray = new BitArray(readyToUseString.Length);
             for (int i = 0; i < readyToUseString.Length; i++) {
@@ -174,6 +182,7 @@ namespace ts7.Data {
                     bitArray[i] = true;
                 }
             }
+
             return bitArray;
 
         }
