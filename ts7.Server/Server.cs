@@ -16,7 +16,7 @@ namespace ts7.Server {
     class Server {
         private const int listenPort = 6100;
         private const int timeSenderPort = 11000;
-        private const int playerLimit = 2;
+        private const int playerLimit = 1;
         private static int time;
         private static int tempTime = 0;
         private static bool gameRunning = false;
@@ -52,6 +52,8 @@ namespace ts7.Server {
                 IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
                 byte[] recvMsg = _listener.Receive(ref sender);
                 Data.Packet packet = Data.Packet.Deserialize(recvMsg);
+                Console.WriteLine("ID: {0}, data: {1}, answer: {2}, operation: {3}", packet.ID, packet.Data, packet.Answer, packet.Operation);
+
                 ProcessData(packet, sender);
             }
         }
@@ -161,6 +163,8 @@ namespace ts7.Server {
         private static void ProcessData(object p, object ep) {
             Data.Packet packet = (Data.Packet)p;
             IPEndPoint endPoint = (IPEndPoint)ep;
+            Console.WriteLine("ID: {0}, data: {1}, answer: {2}, operation: {3}", packet.ID, packet.Data, packet.Answer, packet.Operation);
+
             if (packet.Operation == OperationEnum.REGISTER && packet.Answer == AnswerEnum.REQUEST) {
                 Register(packet, endPoint);
             }

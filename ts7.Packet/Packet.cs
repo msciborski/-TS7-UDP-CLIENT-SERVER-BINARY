@@ -45,56 +45,20 @@ namespace ts7.Data {
             BitArray answerBitArray = SerializeValue((int)Answer, 4);
             BitArray operationBitArray = SerializeValue((int)Operation, 6);
             BitArray completeBitArray = MergeArrays(idBitArray, dataBitArray, answerBitArray, operationBitArray);
-            Reverse(idBitArray);
-            Reverse(dataBitArray);
-            Reverse(answerBitArray);
-            Reverse(operationBitArray);
-            byte[] result = BitArrayToByteArray(completeBitArray, 0, 32);
+            //Reverse(idBitArray);
+            //Reverse(dataBitArray);
+            //Reverse(answerBitArray);
+            //Reverse(operationBitArray);
+            byte[] result = BitArrayToByteArray(completeBitArray);
+            //result = result.Reverse().ToArray();
             return result;
 
         }
 
-        private byte[] BitArrayToByteArray(BitArray bits, int startIndex, int count) {
-            // Get the size of bytes needed to store all bytes
-            int bytesize = count / 8;
-
-            // Any bit left over another byte is necessary
-            if (count % 8 > 0)
-                bytesize++;
-
-            // For the result
-            byte[] bytes = new byte[bytesize];
-
-            // Must init to good value, all zero bit byte has value zero
-            // Lowest significant bit has a place value of 1, each position to
-            // to the left doubles the value
-            byte value = 0;
-            byte significance = 1;
-
-            // Remember where in the input/output arrays
-            int bytepos = 0;
-            int bitpos = startIndex;
-
-            while (bitpos - startIndex < count) {
-                // If the bit is set add its value to the byte
-                if (bits[bitpos])
-                    value += significance;
-
-                bitpos++;
-
-                if (bitpos % 8 == 0) {
-                    // A full byte has been processed, store it
-                    // increase output buffer index and reset work values
-                    bytes[bytepos] = value;
-                    bytepos++;
-                    value = 0;
-                    significance = 1;
-                } else {
-                    // Another bit processed, next has doubled value
-                    significance *= 2;
-                }
-            }
-            return bytes;
+        private byte[] BitArrayToByteArray(BitArray bits) {
+            byte[] ret = new byte[(bits.Length - 1) / 8 + 1];
+            bits.CopyTo(ret, 0);
+            return ret;
         }
 
         public static Packet Deserialize(byte[] bytes) {
