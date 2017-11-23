@@ -89,11 +89,11 @@ namespace ts7.Server {
         private static void SubstractTime(object state) {
             if (time > 0) {
                 Console.WriteLine(time); ;
-                if (tempTime < 3) {
+                if (tempTime < 10) {
                     tempTime++;
                     Console.WriteLine(tempTime);
                 }
-                if (tempTime == 3) {
+                if (tempTime == 10) {
                     Thread thread = new Thread(SendTime);
                     thread.Start(time);
                     tempTime = 0;
@@ -162,6 +162,7 @@ namespace ts7.Server {
             Data.Packet packet = (Data.Packet)p;
             IPEndPoint endPoint = (IPEndPoint)ep;
             if (packet.Operation == OperationEnum.REGISTER && packet.Answer == AnswerEnum.REQUEST) {
+                Console.Write("Operation: {0}, answer: {1}, id: {2}, data: {3}", packet.Operation, packet.Answer, packet.ID, packet.Data);
                 Register(packet, endPoint);
             }
             if (packet.Operation == OperationEnum.GUESS) {
