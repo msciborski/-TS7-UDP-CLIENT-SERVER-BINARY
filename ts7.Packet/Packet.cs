@@ -50,12 +50,16 @@ namespace ts7.Data {
             BitArray answerBitArray = SerializeValue((int)Answer, 4);
             BitArray operationBitArray = SerializeValue((int)Operation, 6);
             BitArray completeBitArray = MergeArrays(idBitArray, dataBitArray, answerBitArray, operationBitArray);
-            //Reverse(idBitArray);
-            //Reverse(dataBitArray);
-            //Reverse(answerBitArray);
-            //Reverse(operationBitArray);
+            Reverse(completeBitArray);
+            foreach (bool b in completeBitArray){
+                if (b == false){
+                    Console.Write("0");
+                }
+                else{
+                    Console.Write("1");
+                }
+            }
             byte[] result = BitArrayToByteArray(completeBitArray);
-            //result = result.Reverse().ToArray();
             Console.WriteLine();
             foreach (var b in result){
                 Console.Write(b.ToString());
@@ -73,6 +77,7 @@ namespace ts7.Data {
         public static Packet Deserialize(byte[] bytes) {
 
             BitArray bitArray = new BitArray(bytes);
+            Reverse(bitArray);
             BitArray idBitArray = new BitArray(8);
             BitArray dataBitArray = new BitArray(8);
             BitArray answerBitArray = new BitArray(4);
