@@ -158,6 +158,8 @@ namespace ts7.Server {
             foreach (var playerData in _players) {
                 playerData.Value.StartThread();
             }
+            //Thread thread = new Thread(SendTime);
+            //thread.Start();
         }
 
         private static void ProcessData(object p, object ep) {

@@ -19,6 +19,7 @@ namespace ts7.Client {
         private static IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 6100);
         private static bool gameRunning = true;
         static void Main(string[] args){
+            bool registered = false;
             SetupClient();
             bool registered;
             do {
@@ -56,23 +57,18 @@ namespace ts7.Client {
             //}
 
             //IPAddress broadcast = IPAddress.Parse("127.0.0.1");
-            //while (true){
-            //    var msg = Console.ReadLine();
-            //    byte[] bytes = Encoding.ASCII.GetBytes(msg);
-            //    IPEndPoint ep = new IPEndPoint(broadcast, 11000);
-            //    EndPoint remoteEndPoint = (EndPoint) ep;
-            //    s.SendTo(bytes, ep);
-            //    Console.WriteLine("Message sent!");
-            //    byte[] recvBytes = new byte[128];
-            //    try{
-            //        s.ReceiveFrom(recvBytes, SocketFlags.None, ref remoteEndPoint);
-            //        Console.WriteLine(Encoding.ASCII.GetString(recvBytes));
-            //    }
-            //    catch (Exception e){
-            //        Console.WriteLine("System disconnected.");
-            //    }
+            while (true) {
+                Console.Write("Podaj wiadomosc:");
+                var msg = Console.ReadLine();
+                byte[] bytes = Encoding.ASCII.GetBytes(msg);
+                try{
+                    _udpClient.Send(bytes, bytes.Length);
+                }
+                catch (Exception e){
+                    Console.WriteLine("Sever disconnected!");
+                }
 
-            //}
+            }
         }
 
         private static void SetupClient() {
