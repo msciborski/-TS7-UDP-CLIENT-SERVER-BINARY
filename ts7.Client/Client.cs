@@ -21,7 +21,6 @@ namespace ts7.Client {
         static void Main(string[] args){
             bool registered = false;
             SetupClient();
-            bool registered;
             do {
                 Console.WriteLine("Wpisz register, aby się zarejestrować:");
                 var msg = Console.ReadLine();
@@ -57,18 +56,6 @@ namespace ts7.Client {
             //}
 
             //IPAddress broadcast = IPAddress.Parse("127.0.0.1");
-            while (true) {
-                Console.Write("Podaj wiadomosc:");
-                var msg = Console.ReadLine();
-                byte[] bytes = Encoding.ASCII.GetBytes(msg);
-                try{
-                    _udpClient.Send(bytes, bytes.Length);
-                }
-                catch (Exception e){
-                    Console.WriteLine("Sever disconnected!");
-                }
-
-            }
         }
 
         private static void SetupClient() {
