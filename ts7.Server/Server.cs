@@ -177,9 +177,10 @@ namespace ts7.Server {
 
 
         private static void Register(Data.Packet packet, IPEndPoint endPoint) {
-            if (!_players.ContainsKey(endPoint)) {
-                _players.Add(endPoint, new PlayerData(endPoint, packet.ID));
-                Data.Packet packetToSend = new Data.Packet(packet.ID, 0, AnswerEnum.ACK, OperationEnum.REGISTER);
+            if (!_players.ContainsKey(endPoint)){
+                var id = HelperData.RandomInt(0, 255);
+                _players.Add(endPoint, new PlayerData(endPoint, id));
+                Data.Packet packetToSend = new Data.Packet(id, 0, AnswerEnum.ACK, OperationEnum.REGISTER);
                 byte[] bytesToSend = packetToSend.Serialize();
                 _listener.Send(bytesToSend, bytesToSend.Length, endPoint);
             }

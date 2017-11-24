@@ -26,7 +26,7 @@ namespace ts7.Client {
                 var msg = Console.ReadLine();
                 if (msg.ToLower().Equals("register")){
 
-                    Data.Packet packet = new Data.Packet(HelperData.RandomInt(0,255), AnswerEnum.REQUEST, OperationEnum.REGISTER);
+                    Data.Packet packet = new Data.Packet(AnswerEnum.REQUEST, OperationEnum.REGISTER);
                     byte[] msgToSend = packet.Serialize();
                     _udpClient.Send(msgToSend, msgToSend.Length);
 

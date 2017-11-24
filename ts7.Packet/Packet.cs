@@ -26,170 +26,180 @@ namespace ts7.Data {
         START = 4,
     }
     public class Packet {
-        private const int ByteLenght = 8;
-        public int ID { get; private set; } //0-255- sessionId
+        public int ID { get; set; } //0-255- sessionId
         public int Data { get; private set; } //0-255- number to guess or time(if server, sends data)
         public AnswerEnum Answer { get; private set; } //enum which represents answer type
         public OperationEnum Operation { get; set; } //enum 
 
-        public Packet(int id, AnswerEnum answer, OperationEnum operation){
-            ID = id;
-            Answer = answer;
-            Operation = operation;
-        }
-        public Packet(int id,int data, AnswerEnum answer, OperationEnum operation) {
+        public Packet(int id, int data, AnswerEnum answer, OperationEnum operation) {
             ID = id;
             Data = data;
             Answer = answer;
             Operation = operation;
         }
 
-        public byte[] Serialize() {
-            BitArray idBitArray = SerializeValue(ID, 8);
-            BitArray dataBitArray = SerializeValue(Data, 8);
-            BitArray answerBitArray = SerializeValue((int)Answer, 4);
-            BitArray operationBitArray = SerializeValue((int)Operation, 6);
-            BitArray completeBitArray = MergeArrays(idBitArray, dataBitArray, answerBitArray, operationBitArray);
-            Reverse(completeBitArray);
-            foreach (bool b in completeBitArray){
-                if (b == false){
-                    Console.Write("0");
-                }
-                else{
-                    Console.Write("1");
-                }
-            }
-            byte[] result = BitArrayToByteArray(completeBitArray);
-            Console.WriteLine();
-            foreach (var b in result){
-                Console.Write(b.ToString());
-            }
-            return result;
-
+        public Packet(int id, AnswerEnum answer, OperationEnum operation){
+            ID = id;
+            Answer = answer;
+            Operation = operation;
+            Data = 0;
+        }
+        public Packet(AnswerEnum answer, OperationEnum operation){
+            ID = 0;
+            Answer = answer;
+            Operation = operation;
+            Data = 0;
         }
 
-        private byte[] BitArrayToByteArray(BitArray bits) {
-            byte[] ret = new byte[(bits.Length - 1) / 8 + 1];
-            bits.CopyTo(ret, 0);
-            return ret;
+        public byte[] Serialize() {
+            List<bool> operationBools = IntToBoolList((int)Operation, 6).ToList();
+            List<bool> answerBools = IntToBoolList((int)Answer, 4).ToList();
+            List<bool> idBools = IntToBoolList(ID, 8).ToList();
+            List<bool> dataBools = IntToBoolList(Data, 8).ToList();
+            List<bool> pendantBools = new List<bool>(){
+                false,
+                false,
+                false,
+                false,
+                false,
+                false
+            };
+            var concatedList = operationBools.Concat(answerBools).Concat(idBools).Concat(dataBools).Concat(pendantBools).ToList();
+            //Console.WriteLine("Operation:");
+            //Print(operationBools);
+            //Console.WriteLine("Answer:");
+            //Print(answerBools);
+            //Console.WriteLine("ID:");
+            //Print(idBools);
+            //Console.WriteLine("Data:");
+            //Print(dataBools);
+            //Console.WriteLine("All:");
+            //Print(concatedList);
+            byte[] result = ConvertBoolArrayToByteArray(concatedList.ToArray());
+            foreach (var b in result) {
+                Console.WriteLine(b.ToString());
+            }
+            return result;
         }
 
         public static Packet Deserialize(byte[] bytes) {
+            bool[] firstBitBools = ConvertByteToBoolArray(bytes[0]);
+            bool[] secondBitBools = ConvertByteToBoolArray(bytes[1]);
+            bool[] thirdBitBools = ConvertByteToBoolArray(bytes[2]);
+            bool[] fourthBitBools = ConvertByteToBoolArray(bytes[3]);
+            //Console.WriteLine("First:");
+            //Print(firstBitBools);
+            //Console.WriteLine("Second:");
+            //Print(secondBitBools);
+            //Console.WriteLine("Third:");
+            //Print(thirdBitBools);
+            //Console.WriteLine("Fourth:");
+            //Print(fourthBitBools);
+            var concatedBools = firstBitBools.Concat(secondBitBools).Concat(thirdBitBools).Concat(fourthBitBools)
+                .ToList();
+            //Console.WriteLine("Deserialized all:");
+            //Print(concatedBools);
+            int operation = Convert.ToInt32(ConvertBoolArrayToString(concatedBools.Take(6).ToArray()), 2);
+            int answer = Convert.ToInt32(ConvertBoolArrayToString(concatedBools.Skip(6).Take(4).ToArray()), 2);
+            int id = Convert.ToInt32(ConvertBoolArrayToString(concatedBools.Skip(10).Take(8).ToArray()), 2);
+            int data = Convert.ToInt32(ConvertBoolArrayToString(concatedBools.Skip(18).Take(8).ToArray()), 2);
+            Console.WriteLine("Operation: {0}, answer: {1}, id: {2}, data: {3}", operation, answer, id, data);
 
-            BitArray bitArray = new BitArray(bytes);
-            Reverse(bitArray);
-            BitArray idBitArray = new BitArray(8);
-            BitArray dataBitArray = new BitArray(8);
-            BitArray answerBitArray = new BitArray(4);
-            BitArray operationBitArray = new BitArray(6);
+            return new Packet(id, data, (AnswerEnum)answer, (OperationEnum)operation);
+        }
+        private static bool[] ConvertByteToBoolArray(byte b) {
+            // prepare the return result
+            bool[] result = new bool[8];
 
-            int secondArrayCounter = 0;
-            for (int i = 0; i < operationBitArray.Length; i++) {
-                operationBitArray[i] = bitArray[secondArrayCounter];
-                secondArrayCounter++;
-            }
-            for (int i = 0; i < answerBitArray.Length; i++) {
-                answerBitArray[i] = bitArray[secondArrayCounter];
-                secondArrayCounter++;
-            }
-            for (int i = 0; i < idBitArray.Length; i++) {
-                idBitArray[i] = bitArray[secondArrayCounter];
-                secondArrayCounter++;
-            }
-            for (int i = 0; i < dataBitArray.Length; i++) {
-                dataBitArray[i] = bitArray[secondArrayCounter];
-                secondArrayCounter++;
-            }
+            // check each bit in the byte. if 1 set to true, if 0 set to false
+            for (int i = 0; i < 8; i++)
+                result[i] = (b & (1 << i)) == 0 ? false : true;
 
-            Reverse(idBitArray);
-            Reverse(dataBitArray);
-            Reverse(answerBitArray);
-            Reverse(operationBitArray);
-            Packet packet = new Packet(GetIntFromBitArray(idBitArray), GetIntFromBitArray(dataBitArray),
-                (AnswerEnum)GetIntFromBitArray(answerBitArray), (OperationEnum)GetIntFromBitArray(operationBitArray));
+            // reverse the array
+            Array.Reverse(result);
 
-            return packet;
+            return result;
         }
 
-        private static int GetIntFromBitArray(BitArray bitArray) {
-
-            //Becouse int has 4bytes
-            if (bitArray.Length > 32)
-                throw new ArgumentException("Argument length shall be at most 32 bits.");
-
-            int[] array = new int[1];
-            bitArray.CopyTo(array, 0);
-            return array[0];
-
-        }
-
-        //We have to reverse our bit arrays, becouse GetIntFromBitArray conversion reverse it to. :D 
-        private static void Reverse(BitArray array) {
-            int length = array.Length;
-            int mid = (length / 2);
-
-            for (int i = 0; i < mid; i++) {
-                bool bit = array[i];
-                array[i] = array[length - i - 1];
-                array[length - i - 1] = bit;
-            }
-        }
-
-        private BitArray MergeArrays(BitArray idBitArray, BitArray dataBitArray, BitArray answerBitArray,
-            BitArray operationBitArray) {
-            BitArray completeBitArray = new BitArray(32);
-
-            int countIdBitArray = idBitArray.Length;
-            int countDataBitArray = dataBitArray.Length;
-            int countAnswetBitArray = answerBitArray.Length;
-            int countOperationBitArray = operationBitArray.Length;
-            int secondArrayCounter = 0;
-            for (int i = 0; i < countOperationBitArray; i++) {
-                completeBitArray[secondArrayCounter] = operationBitArray[i];
-                secondArrayCounter++;
-            }
-            for (int i = 0; i < countAnswetBitArray; i++) {
-                completeBitArray[secondArrayCounter] = answerBitArray[i];
-                secondArrayCounter++;
-            }
-            for (int i = 0; i < countIdBitArray; i++) {
-                completeBitArray[secondArrayCounter] = idBitArray[i];
-                secondArrayCounter++;
-            }
-
-            for (int i = 0; i < countDataBitArray; i++) {
-                completeBitArray[secondArrayCounter] = dataBitArray[i];
-                secondArrayCounter++;
-            }
-            for (int i = 0; i < 6; i++) {
-                        completeBitArray[secondArrayCounter] = false;
-                secondArrayCounter++;
-            }
-
-            return completeBitArray;
-
-        }
-
-        private BitArray SerializeValue(int value, int bitValue) {
-            var idBinString = Convert.ToString(value, 2);
-            StringBuilder builder = new StringBuilder();
-            int howManyZero = bitValue - idBinString.Length;
-
-            for (int i = 0; i < howManyZero; i++) {
-                builder.Append('0');
-            }
-            var readyToUseString = builder.Append(idBinString);
-            BitArray bitArray = new BitArray(readyToUseString.Length);
-            for (int i = 0; i < readyToUseString.Length; i++) {
-                if (readyToUseString[i] == '0') {
-                    bitArray[i] = false;
+        private static string ConvertBoolArrayToString(bool[] bools) {
+            string result = null;
+            foreach (var b in bools) {
+                if (b == false) {
+                    result += "0";
                 } else {
-                    bitArray[i] = true;
+                    result += "1";
                 }
             }
+            return result;
+        }
+        private byte[] ConvertBoolArrayToByteArray(bool[] source) {
+            bool[] tempArr = source.Take(8).ToArray();
+            bool[] tempArr2 = source.Skip(8).Take(8).ToArray();
+            bool[] tempArr3 = source.Skip(16).Take(8).ToArray();
+            bool[] tempArr4 = source.Skip(24).Take(8).ToArray();
 
-            return bitArray;
+            byte byte1 = ConvertBoolArrayToByte(tempArr);
+            byte byte2 = ConvertBoolArrayToByte(tempArr2);
+            byte byte3 = ConvertBoolArrayToByte(tempArr3);
+            byte byte4 = ConvertBoolArrayToByte(tempArr4);
 
+            return new byte[]{
+                byte1,
+                byte2,
+                byte3,
+                byte4
+            };
+
+        }
+        private byte ConvertBoolArrayToByte(bool[] source) {
+            byte result = 0;
+            // This assumes the array never contains more than 8 elements!
+            int index = 8 - source.Length;
+
+            // Loop through the array
+            foreach (bool b in source) {
+                // if the element is 'true' set the bit at that position
+                if (b)
+                    result |= (byte)(1 << (7 - index));
+
+                index++;
+            }
+
+            return result;
+        }
+        private IEnumerable<bool> IntToBoolList(int number, int length) {
+            var intBinaryString = Convert.ToString(number, 2);
+            StringBuilder builder = new StringBuilder();
+            var homeManyZeroes = length - intBinaryString.Length;
+
+            for (int i = 0; i < homeManyZeroes; i++) {
+                builder.Append("0");
+            }
+            builder.Append(intBinaryString);
+            return BinaryNumberStringToBoolList(builder.ToString(), length);
+
+        }
+
+        private static void Print(IEnumerable<bool> list) {
+            foreach (var b in list) {
+                if (b == false) {
+                    Console.Write("0");
+                } else {
+                    Console.Write("1");
+                }
+            }
+            Console.WriteLine();
+        }
+        private IEnumerable<bool> BinaryNumberStringToBoolList(string binaryString, int length) {
+            bool[] arr = new bool[length];
+            for (int i = 0; i < length; i++) {
+                if (binaryString[i].Equals('0')) {
+                    arr[i] = false;
+                } else {
+                    arr[i] = true;
+                }
+            }
+            return arr;
         }
     }
 }
